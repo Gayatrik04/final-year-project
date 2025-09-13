@@ -72,10 +72,11 @@ app.listen(5000, () => {
 
 // add a transaction
 app.post("/transactions", (req, res) => {
-  const { userId, date, amount, category, description } = req.body;
+  const { userId, date, amount, category, description, groupId } = req.body;
+
   db.query(
-    "INSERT INTO transactions (user_id, date, amount, category, description) VALUES (?, ?, ?, ?, ?)",
-    [userId, date, amount, category, description],
+    "INSERT INTO transactions (user_id, date, amount, category, description, group_id) VALUES (?, ?, ?, ?, ?, ?)",
+    [userId, date, amount, category, description, groupId || null], // set null if no group
     (err, result) => {
       if (err) return res.status(500).json({ error: "Database error" });
       res.json({ id: result.insertId, message: "Transaction added" });
@@ -118,3 +119,53 @@ app.put("/transactions/:id", (req, res) => {
     }
   );
 });
+
+//
+app.post("/groups", async (req, res) => {
+  const { name, createdBy } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO groups (name, created_by) VALUES (?, ?)",
+      [name, createdBy]
+    );
+    // Add creator as member too
+    await db.query(
+      "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
+      [result.insertId, createdBy]
+    );
+    res.json({ id: result.insertId, name });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create group" });
+  }
+});
+
+app.get("/groups/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const [rows] = await db.query(
+      `SELECT g.id, g.name 
+       FROM groups g
+       JOIN group_members gm ON g.id = gm.group_id
+       WHERE gm.user_id = ?`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch groups" });
+  }
+});
+
+app.get("/groups/:groupId/transactions", async (req, res) => {
+  const groupId = req.params.groupId;
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM transactions WHERE group_id = ?",
+      [groupId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch group transactions" });
+  }
+});
+
+//

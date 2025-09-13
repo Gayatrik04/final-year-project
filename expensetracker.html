@@ -84,6 +84,27 @@
           </select>
       </div>
 </div>
+//
+<h2>Groups</h2>
+<div class="form-group">
+  <label for="groupName">Create Group:</label>
+  <input type="text" id="groupName" placeholder="Enter group name">
+  <button onclick="createGroup()">Create</button>
+</div>
+
+<div id="group-list"></div>
+
+<div id="group-expenses-section" class="hidden">
+  <h3>Group Expenses</h3>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Amount</th><th>Description</th></tr>
+    </thead>
+    <tbody id="group-expense-table"></tbody>
+  </table>
+  <button onclick="addGroupExpense()">Add Group Expense</button>
+</div>
+//
 
 
   <!-- Totals -->
