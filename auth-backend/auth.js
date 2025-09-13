@@ -12,12 +12,17 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234L", // your MySQL password
+  password: "1234", // your MySQL password
   database: "auth_dbb",
 });
 
 db.connect((err) => {
   if (err) throw err;
+  // Example inside POST /transactions
+  if (err) {
+    console.error("🔴 MySQL Error:", err); // <-- add this line
+    return res.status(500).json({ error: err.sqlMessage }); // <-- show actual MySQL error
+  }
   console.log("MySQL Connected...");
 });
 
