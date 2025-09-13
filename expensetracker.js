@@ -21,9 +21,10 @@ const savedLimit = localStorage.getItem(currentUser + "_limit");
 if (savedLimit) limitInput.value = savedLimit;
 
 function updateTotals() {
-  let totalIncome = 0, totalExpense = 0;
+  let totalIncome = 0,
+    totalExpense = 0;
 
-  transactions.forEach(tx => {
+  transactions.forEach((tx) => {
     const amt = Number(tx.amount);
     if (tx.category === "Income") {
       totalIncome += amt;
@@ -44,12 +45,11 @@ function updateTotals() {
   }
 }
 
-
 function clearForm() {
-  document.getElementById("date").value = '';
-  document.getElementById("amount").value = '';
-  document.getElementById("category").value = 'Income';
-  document.getElementById("description").value = '';
+  document.getElementById("date").value = "";
+  document.getElementById("amount").value = "";
+  document.getElementById("category").value = "Income";
+  document.getElementById("description").value = "";
   editIndex = -1;
   actionButton.textContent = "Add Expense";
 }
@@ -85,14 +85,19 @@ async function addExpense() {
     return;
   }
 
-  const transaction = { date, amount, category, description, userId: currentUser };
+  const transaction = {
+    date,
+    amount,
+    category,
+    description,
+    userId: currentUser,
+  };
 
   if (editIndex === -1) {
-    
     await fetch("http://localhost:5000/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(transaction)
+      body: JSON.stringify(transaction),
     });
   } else {
     // Update existing → PUT
@@ -100,7 +105,7 @@ async function addExpense() {
     await fetch(`http://localhost:5000/transactions/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(transaction)
+      body: JSON.stringify(transaction),
     });
     fetchTransactions();
   }
@@ -109,8 +114,6 @@ async function addExpense() {
   fetchTransactions(); // refresh list from backend
 }
 
-
-  
 function editTransaction(index) {
   const tx = transactions[index];
   document.getElementById("date").value = tx.date;
@@ -124,11 +127,12 @@ function editTransaction(index) {
 async function deleteTransaction(index) {
   const id = transactions[index].id; // id comes from DB
   if (confirm("Are you sure you want to delete this transaction?")) {
-    await fetch(`http://localhost:5000/transactions/${id}`, { method: "DELETE" });
+    await fetch(`http://localhost:5000/transactions/${id}`, {
+      method: "DELETE",
+    });
     fetchTransactions(); // reload fresh data
   }
 }
-
 
 function applySort() {
   const sortBy = sortSelect.value;
@@ -136,8 +140,7 @@ function applySort() {
   if (sortBy === "date") {
     // Sort by date (newest first)
     transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-  } 
-  else if (sortBy === "category") {
+  } else if (sortBy === "category") {
     // Sort alphabetically by category
     transactions.sort((a, b) => a.category.localeCompare(b.category));
   }
@@ -145,17 +148,18 @@ function applySort() {
   renderTable();
 }
 
-
 async function fetchTransactions() {
-  const response = await fetch(`http://localhost:5000/transactions/${currentUser}`);
+  const response = await fetch(
+    `http://localhost:5000/transactions/${currentUser}`
+  );
   transactions = await response.json();
   applySort(); // keeps sorting
 }
 
-fetchTransactions(); 
+fetchTransactions();
 
-//logout 
+//logout
 document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("currentUser"); 
-  window.location.href = "login.html";  
+  localStorage.removeItem("currentUser");
+  window.location.href = "login.html";
 });
