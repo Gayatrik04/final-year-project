@@ -12,18 +12,18 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "gayatri@MYSQL", // your MySQL password
-  database: "auth_dbb"
+  password: "1234L", // your MySQL password
+  database: "auth_dbb",
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) throw err;
   console.log("MySQL Connected...");
 });
 
 // Signup Route
 app.post("/signup", async (req, res) => {
-  const {email, password } = req.body;
+  const { email, password } = req.body;
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -42,24 +42,28 @@ app.post("/signup", async (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    if (results.length === 0) return res.status(400).json({ message: "User not found!" });
+  db.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    async (err, results) => {
+      if (err) return res.status(500).json({ error: err });
+      if (results.length === 0)
+        return res.status(400).json({ message: "User not found!" });
 
-    const user = results[0];
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+      const user = results[0];
+      const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) return res.status(400).json({ message: "Invalid password!" });
+      if (!isPasswordValid)
+        return res.status(400).json({ message: "Invalid password!" });
 
-    res.json({ message: "Login successful!",userId: user.id });
-  });
+      res.json({ message: "Login successful!", userId: user.id });
+    }
+  );
 });
 
 app.listen(5000, () => {
   console.log("Server running on http://localhost:5000");
 });
-
-
 
 // add a transaction
 app.post("/transactions", (req, res) => {
@@ -87,7 +91,7 @@ app.get("/transactions/:userId", (req, res) => {
   );
 });
 
-//delete transaction 
+//delete transaction
 app.delete("/transactions/:id", (req, res) => {
   const { id } = req.params;
   db.query("DELETE FROM transactions WHERE id = ?", [id], (err) => {
