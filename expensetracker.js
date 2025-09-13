@@ -50,19 +50,21 @@ function updateTotals() {
   updateAISuggestion(limitValue, totalExpense);
 }
 
+const savingGoalDateInput = document.getElementById("savingGoalDate");
+
 function updateAISuggestion(limitValue, totalExpense) {
-  const targetDate = targetDateInput.value;
-  if (!limitValue || !targetDate) {
+  const savingGoalDate = savingGoalDateInput.value;
+  if (!limitValue || !savingGoalDate) {
     aiSuggestionDiv.classList.add("hidden");
     return;
   }
 
   const today = new Date();
-  const target = new Date(targetDate);
+  const target = new Date(savingGoalDate);
   const diffInDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 
   if (diffInDays <= 0) {
-    aiSuggestionDiv.textContent = "⚠️ Target date must be in the future!";
+    aiSuggestionDiv.textContent = "⚠️ Saving goal date must be in the future!";
     aiSuggestionDiv.classList.remove("hidden");
     return;
   }
@@ -73,7 +75,7 @@ function updateAISuggestion(limitValue, totalExpense) {
   if (dailySpend < 0) {
     aiSuggestionDiv.textContent = "🚨 You have already overspent your limit!";
   } else {
-    aiSuggestionDiv.textContent = `💡 To stay within your limit, spend only ₹${dailySpend.toFixed(
+    aiSuggestionDiv.textContent = `💡 To reach your goal, spend only ₹${dailySpend.toFixed(
       2
     )} per day for the next ${diffInDays} days.`;
   }
@@ -82,7 +84,7 @@ function updateAISuggestion(limitValue, totalExpense) {
 }
 
 limitInput.addEventListener("input", () => updateTotals());
-targetDateInput.addEventListener("change", () => updateTotals());
+savingGoalDateInput.addEventListener("change", () => updateTotals());
 
 //
 function clearForm() {
