@@ -19,6 +19,9 @@ const limitWarning = document.getElementById("limit-warning");
 
 const savedLimit = localStorage.getItem(currentUser + "_limit");
 if (savedLimit) limitInput.value = savedLimit;
+//
+const targetDateInput = document.getElementById("targetDate");
+const aiSuggestionDiv = document.getElementById("ai-suggestion");
 
 function updateTotals() {
   let totalIncome = 0,
@@ -43,8 +46,45 @@ function updateTotals() {
   } else {
     limitWarning.classList.add("hidden");
   }
+
+  updateAISuggestion(limitValue, totalExpense);
 }
 
+function updateAISuggestion(limitValue, totalExpense) {
+  const targetDate = targetDateInput.value;
+  if (!limitValue || !targetDate) {
+    aiSuggestionDiv.classList.add("hidden");
+    return;
+  }
+
+  const today = new Date();
+  const target = new Date(targetDate);
+  const diffInDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+
+  if (diffInDays <= 0) {
+    aiSuggestionDiv.textContent = "⚠️ Target date must be in the future!";
+    aiSuggestionDiv.classList.remove("hidden");
+    return;
+  }
+
+  const remainingBudget = limitValue - totalExpense;
+  const dailySpend = remainingBudget / diffInDays;
+
+  if (dailySpend < 0) {
+    aiSuggestionDiv.textContent = "🚨 You have already overspent your limit!";
+  } else {
+    aiSuggestionDiv.textContent = `💡 To stay within your limit, spend only ₹${dailySpend.toFixed(
+      2
+    )} per day for the next ${diffInDays} days.`;
+  }
+
+  aiSuggestionDiv.classList.remove("hidden");
+}
+
+limitInput.addEventListener("input", () => updateTotals());
+targetDateInput.addEventListener("change", () => updateTotals());
+
+//
 function clearForm() {
   document.getElementById("date").value = "";
   document.getElementById("amount").value = "";
