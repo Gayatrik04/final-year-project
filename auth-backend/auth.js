@@ -72,11 +72,10 @@ app.listen(5000, () => {
 
 // add a transaction
 app.post("/transactions", (req, res) => {
-  const { userId, date, amount, category, description, groupId } = req.body;
-
+  const { userId, date, amount, category, description } = req.body;
   db.query(
-    "INSERT INTO transactions (user_id, date, amount, category, description, group_id) VALUES (?, ?, ?, ?, ?, ?)",
-    [userId, date, amount, category, description, groupId || null], // set null if no group
+    "INSERT INTO transactions (user_id, date, amount, category, description) VALUES (?, ?, ?, ?, ?)",
+    [userId, date, amount, category, description],
     (err, result) => {
       if (err) return res.status(500).json({ error: "Database error" });
       res.json({ id: result.insertId, message: "Transaction added" });
