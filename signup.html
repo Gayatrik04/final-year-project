@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>sign up</title>
+  <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Sign Up</h2>
+    <div class="form-group">
+      <label>Email:</label>
+      <input type="email" id="signup-email" required />
+    </div>
+    <div class="form-group">
+      <label>Password:</label>
+      <input type="password" id="signup-password" required />
+    </div>
+    <div class="error" id="signup-error"></div>
+    <button onclick="handleSignup()">Sign Up</button>
+    <div class="link">
+      <a href="login.html" style="color: #ffffff;">Already have an account? Login</a>
+    </div>
+  </div>
+
+  <script src="signup.js"></script>
+</body>
+</html>

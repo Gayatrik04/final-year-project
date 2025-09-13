@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Dashboard</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="navbar.css">
+  
+</head>
+<body>
+  <nav class="custom-navbar">
+  <div class="navbar-container">
+    <!-- Logo -->
+    <a href="expensetracker.html" class="nav-logo">Expense Tracker</a>
+
+    <!-- Hamburger for mobile -->
+    <input type="checkbox" id="menu-toggle" />
+    <label for="menu-toggle" class="menu-icon">&#9776;</label>
+
+    <!-- Right Side -->
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="active">Dashboard</a></li>
+        <li><a href="currency.html">Currency Calculator</a></li>
+        <li><a href="policy.html">Policy</a></li>
+      </ul>
+      <button id="logoutBtn" class="nav-logout">Logout</button>
+    </div>
+  </div>
+</nav>
+ 
+
+
+    <!-- Summary Cards -->
+    <div class="row g-3">
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Total Income</h6>
+          <h4 id="totalIncome">₹0</h4>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Total Expense</h6>
+          <h4 id="totalExpense">₹0</h4>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Balance</h6>
+          <h4 id="balance">₹0</h4>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Highest Category</h6>
+          <h5 id="highestCategory">-</h5>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Most Frequent Category</h6>
+          <h5 id="mostFreqCategory">-</h5>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card p-3">
+          <h6>Avg Monthly Spending</h6>
+          <h5 id="avgMonthlySpending">₹0</h5>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5>Spending Overview</h5>
+            <select id="chartSelector" class="form-select w-auto">
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="category">By Category</option>
+            </select>
+          </div>
+          <canvas id="dynamicChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables Section -->
+    <div class="row mt-4">
+      <!-- Recent Transactions -->
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5>Recent Transactions</h5>
+            <div>
+              <button class="btn btn-primary btn-sm" id="exportRecentCSV">CSV</button>
+              <button class="btn btn-primary btn-sm" id="exportRecentPDF">PDF</button>
+            </div>
+          </div>
+          <table class="table table-striped mt-3" id="recentTransactionsTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be injected here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Expenses -->
+      <div class="col-md-3">
+        <div class="card p-3">
+          <h5>Top 5 Expenses</h5>
+          <table class="table table-striped mt-3" id="topExpensesTable">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Incomes -->
+      <div class="col-md-3">
+        <div class="card p-3">
+          <h5>Top 5 Incomes</h5>
+          <table class="table table-striped mt-3" id="topIncomesTable">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Full Report -->
+    <div class="row mt-4">
+      <div class="col-md-12 text-center">
+        <button class="btn btn-primary" id="exportFullPDF">Export Full Report (PDF)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom JS -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
