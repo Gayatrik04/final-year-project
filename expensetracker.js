@@ -213,16 +213,13 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 let monthlyPredictionChart = null;
 
 function parsePossibleDate(d) {
-  // Try Date parsing robustly for common formats
   const dt = new Date(d);
   if (!isNaN(dt)) return dt;
-  // fallback for dd-mm-yyyy or dd/mm/yyyy
+
   const parts = String(d).split(/[-\/]/);
   if (parts.length === 3) {
-    // detect dd-mm-yyyy
     if (parts[2].length === 4)
       return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
-    // detect yyyy-mm-dd
     if (parts[0].length === 4)
       return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   }
@@ -230,38 +227,41 @@ function parsePossibleDate(d) {
 }
 
 function getDaysInMonth(year, monthZeroBased) {
-  // monthZeroBased: 0..11
   return new Date(year, monthZeroBased + 1, 0).getDate();
 }
 
 function computeAndRenderMonthlyPrediction(transactionsArray) {
   try {
+    if (!Array.isArray(transactionsArray)) {
+      console.error("Invalid transactionsArray:", transactionsArray);
+      document.getElementById("prediction-text").innerText =
+        "Could not compute monthly prediction.";
+      return;
+    }
+
     const now = new Date();
     const year = now.getFullYear();
-    const month = now.getMonth(); // 0..11
-    const todayDate = now.getDate(); // 1..31
+    const month = now.getMonth();
+    const todayDate = now.getDate();
     const daysInMonth = getDaysInMonth(year, month);
 
-    // init daily totals array (index 0 = day 1)
     const dailyTotals = new Array(daysInMonth).fill(0);
 
-    // Sum amounts for each day (only include amounts up to today)
     transactionsArray.forEach((tx) => {
       const dateObj = parsePossibleDate(
         tx.date || tx.transactionDate || tx.timestamp || tx.createdAt
       );
       if (!dateObj) return;
+
       if (dateObj.getFullYear() === year && dateObj.getMonth() === month) {
-        const d = dateObj.getDate(); // 1..daysInMonth
+        const d = dateObj.getDate();
         if (d >= 1 && d <= daysInMonth) {
-          // ensure numeric amount
-          const amt = Number(tx.amount ?? tx.value ?? 0);
+          const amt = parseFloat(tx.amount ?? tx.value ?? 0);
           if (!isNaN(amt)) dailyTotals[d - 1] += amt;
         }
       }
     });
 
-    // build cumulative actual up to today
     const cumulativeActual = [];
     let running = 0;
     for (let i = 0; i < daysInMonth; i++) {
@@ -273,31 +273,26 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
     const avgDailySoFar = todayDate > 0 ? spentSoFar / todayDate : 0;
     const predictedTotal = Math.round(avgDailySoFar * daysInMonth * 100) / 100;
 
-    // build dataset arrays for Chart.js:
-    // actualData: cumulative values up to today, null afterwards
-    // predictedData: null up to day (today - 1), then projected cumulative from today..end
-    const labels = [];
-    for (let i = 1; i <= daysInMonth; i++) labels.push(String(i));
+    const labels = Array.from({ length: daysInMonth }, (_, i) =>
+      (i + 1).toString()
+    );
 
     const actualData = new Array(daysInMonth).fill(null);
     for (let i = 0; i < todayDate; i++) actualData[i] = cumulativeActual[i];
 
     const predictedData = new Array(daysInMonth).fill(null);
-    // projection: start from spentSoFar, add avgDailySoFar for each future day
     for (let i = todayDate - 1; i < daysInMonth; i++) {
-      const daysFromStart = i + 1; // day number
-      if (daysFromStart <= todayDate) {
-        // include today's actual (so there is overlap at the boundary)
-        predictedData[i] = cumulativeActual[i];
-      } else {
-        // predicted cumulative for future day
-        const projected =
-          spentSoFar + avgDailySoFar * (daysFromStart - todayDate);
-        predictedData[i] = Math.round((projected + Number.EPSILON) * 100) / 100;
-      }
+      predictedData[i] =
+        i + 1 <= todayDate
+          ? cumulativeActual[i]
+          : Math.round(
+              (spentSoFar +
+                avgDailySoFar * (i + 1 - todayDate) * 1 +
+                Number.EPSILON) *
+                100
+            ) / 100;
     }
 
-    // update prediction text
     const pText = document.getElementById("prediction-text");
     if (pText) {
       if (transactionsArray.length === 0 || spentSoFar === 0) {
@@ -310,14 +305,17 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
       }
     }
 
-    // Build or update Chart.js chart
-    const ctx = document
-      .getElementById("monthlyPredictionChart")
-      .getContext("2d");
+    const canvas = document.getElementById("monthlyPredictionChart");
+    if (!canvas) {
+      console.error("Canvas element #monthlyPredictionChart not found");
+      return;
+    }
+    const ctx = canvas.getContext("2d");
+
     const config = {
       type: "line",
       data: {
-        labels: labels,
+        labels,
         datasets: [
           {
             label: "Actual (cumulative)",
@@ -326,7 +324,6 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
             borderWidth: 2,
             pointRadius: 3,
             fill: false,
-            // visual: a solid line
           },
           {
             label: "Predicted (projection)",
@@ -336,7 +333,6 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
             borderDash: [6, 6],
             pointRadius: 2,
             fill: false,
-            // visual: dashed line
           },
         ],
       },
@@ -344,10 +340,7 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: true, position: "top" },
-          tooltip: { mode: "index", intersect: false },
-        },
+        plugins: { legend: { display: true, position: "top" } },
         scales: {
           x: { title: { display: true, text: "Day of month" } },
           y: {
@@ -359,7 +352,6 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
     };
 
     if (monthlyPredictionChart) {
-      // replace data and update
       monthlyPredictionChart.data = config.data;
       monthlyPredictionChart.options = config.options;
       monthlyPredictionChart.update();
