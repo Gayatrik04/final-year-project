@@ -235,15 +235,6 @@ td.description-cell {
   width: 100% !important;
 }
 
-/* Prediction text styling */
-#prediction-text {
-  margin-bottom: 6px;
-  font-size: 0.95rem;
-  font-weight: 500; 
-  color: #e6e8ea;
-  text-align: center;
-}
-
 
 
 
