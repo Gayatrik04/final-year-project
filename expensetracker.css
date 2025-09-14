@@ -228,19 +228,5 @@ td.description-cell {
   max-height: 150px;  /* reduce chart height */
 }
 
-#insight-window {
-  display: none; /* hidden initially */
-  position: absolute;
-  bottom: 60px;
-  right: 0;
-  width: 280px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  padding: 12px;
-  flex-direction: column;
-  gap: 10px;
-  font-family: "Segoe UI", sans-serif;
-  z-index: 1000; /* ensure above all other elements */
-}
+
+
