@@ -215,18 +215,36 @@ td.description-cell {
   display: none;
 }
 
+
+
+/* Monthly prediction section - compact version */
 #monthly-prediction {
-  background: #fff;
+  background: #181616;                   /* soft background for consistency */
   padding: 12px;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
-  max-width: 400px;   /* make section narrower */
-  margin: 18px auto;
+  box-shadow: 0 6px 18px rgba(41, 42, 41, 0.08); /* slightly stronger for clarity */
+  max-width: 400px;                      /* compact width */
+  margin: 18px auto;                     /* center it */
+  font-family: 'Segoe UI', sans-serif;
+  color: #e8eaed;
 }
 
+/* Chart area - smaller height */
 #monthlyPredictionChart {
-  max-height: 150px;  /* reduce chart height */
+  max-height: 150px !important;          /* compact chart size */
+  width: 100% !important;
 }
+
+/* Prediction text styling */
+#prediction-text {
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  font-weight: 500; 
+  color: #e6e8ea;
+  text-align: center;
+}
+
+
 
 
 
