@@ -166,5 +166,3 @@ app.get("/groups/:groupId/transactions", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch group transactions" });
   }
 });
-
-//

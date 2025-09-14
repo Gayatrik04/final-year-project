@@ -236,6 +236,77 @@ td.description-cell {
 }
 
 
+/* AI Suggestions Button */
+/* AI Suggestions Button - Top Right Corner */
+.ai-suggestions-btn {
+  background-color: #bb86fc;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  
+  /* Fixed top-right position */
+  position: fixed;   /* fixed so it stays at top-right even on scroll */
+  top: 90px;     /* distance from top of page */
+  right: 20px;       /* distance from right edge */
+  z-index: 1001;     /* above other elements */
+}
+
+.ai-suggestions-btn:hover {
+  background-color: #3a8ed9;
+  
+}
+
+/* Popup Styling - Top Right */
+.ai-suggestions-popup {
+  position: fixed;  /* fixed to top-right corner */
+  top: 60px;        /* just below the button */
+  right: 20px;      /* aligned with button */
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  padding: 10px;
+  z-index: 1000;
+  display: none;
+}
+
+.ai-suggestions-popup.show {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.ai-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+}
+
+.ai-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.ai-suggestions-list {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.4em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 
 

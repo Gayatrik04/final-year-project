@@ -70,9 +70,6 @@
   <input type="date" id="savingGoalDate">
     </div>
     <div id="ai-suggestion" class="ai-suggestion hidden"></div>
-
-
-
     <div class="controls">
 
       <button onclick="addExpense()">Add Expense</button>
@@ -85,6 +82,26 @@
           </select>
       </div>
 </div>
+
+
+ <!-- AI Suggestions Button (top-right) -->
+<button id="ai-suggestions-btn" class="ai-suggestions-btn">
+ 📜 AI Suggestions
+</button>
+
+<!-- AI Suggestions Popup -->
+<div id="ai-suggestions-popup" class="ai-suggestions-popup hidden">
+  <div class="ai-popup-header">
+    <span>AI Tips & Suggestions</span>
+    <button id="ai-close-btn" class="ai-close-btn">&times;</button>
+  </div>
+  <div id="ai-suggestions-list" class="ai-suggestions-list">
+    <p>Click to fetch suggestions...</p>
+  </div>
+</div>
+
+  
+
 
   <!-- Totals -->
   <div class="totals">
