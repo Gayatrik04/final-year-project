@@ -34,8 +34,8 @@ function updateTotals() {
     } else {
       totalExpense += amt;
     }
-    // at the end of updateTotals()
-    computeAndRenderMonthlyPrediction(transactions); // <-- add this line
+    //updateTotals()
+    computeAndRenderMonthlyPrediction(transactions); //
   });
 
   incomeDisplay.textContent = totalIncome.toFixed(2);
@@ -364,3 +364,173 @@ function computeAndRenderMonthlyPrediction(transactionsArray) {
     if (pText) pText.innerText = "Could not compute monthly prediction.";
   }
 }
+
+// ================= AI Suggestions Logic ==================
+/* AI Widget — robust version
+   Put this at the end of expensetracker.js (after HTML is loaded), or keep it in a script tag before </body>.
+*/
+document.addEventListener("DOMContentLoaded", () => {
+  // DOM elements (IDs must match your HTML)
+  const suggestionsList = document.getElementById("ai-suggestions-list");
+  const generateBtn = document.getElementById("ai-generate-btn");
+  const toggleBtn = document.getElementById("ai-widget-toggle");
+  const widgetContainer = document.getElementById("ai-widget-container");
+  const refreshBtn = document.getElementById("ai-refresh-btn"); // optional
+
+  // Check elements exist
+  if (!suggestionsList || !generateBtn || !toggleBtn || !widgetContainer) {
+    console.error("AI Widget: Missing required element(s). Found:", {
+      suggestionsList: !!suggestionsList,
+      generateBtn: !!generateBtn,
+      toggleBtn: !!toggleBtn,
+      widgetContainer: !!widgetContainer,
+    });
+    return; // stop: fix HTML IDs or move script below HTML
+  }
+
+  // Ensure widget initially hidden (you can change default)
+  if (!widgetContainer.style.display) widgetContainer.style.display = "none";
+
+  // Helper: obtain user data automatically.
+  // It will:
+  //  - call getUserDataFromApp() if that function exists (supports async or sync)
+  //  - else fall back to global window.userData or window.userDataLocal or static `userData` variable
+  async function fetchUserDataAuto() {
+    try {
+      if (typeof getUserDataFromApp === "function") {
+        const maybePromise = getUserDataFromApp();
+        const resolved =
+          maybePromise instanceof Promise ? await maybePromise : maybePromise;
+        return resolved || { income: 0, savings: 0, expenses: [] };
+      }
+      // Fallbacks if you keep a global variable:
+      if (window.userData) return window.userData;
+      if (window.userDataLocal) return window.userDataLocal;
+      if (typeof userData !== "undefined") return userData; // your previous example var
+      // Last resort, try localStorage "expenses"/"income"
+      try {
+        const expRaw = localStorage.getItem("expenses");
+        const incRaw = localStorage.getItem("income");
+        const expenses = expRaw ? JSON.parse(expRaw) : [];
+        const income = incRaw ? parseFloat(incRaw) || 0 : 0;
+        const totalExpenses = Array.isArray(expenses)
+          ? expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+          : 0;
+        const savings = income > 0 ? income - totalExpenses : 0;
+        return {
+          income,
+          savings,
+          expenses: Array.isArray(expenses) ? expenses : [],
+        };
+      } catch (e) {
+        return { income: 0, savings: 0, expenses: [] };
+      }
+    } catch (err) {
+      console.error("AI Widget: fetchUserDataAuto error", err);
+      return { income: 0, savings: 0, expenses: [] };
+    }
+  }
+
+  // Generate suggestions from user object (synchronous)
+  function generateSuggestions(user) {
+    const suggestions = [];
+    if (!user || !Array.isArray(user.expenses) || user.expenses.length === 0) {
+      suggestions.push(
+        "⚠️ No expenses found. Please add your expenses to get AI suggestions."
+      );
+      return suggestions;
+    }
+
+    const totalExpenses = user.expenses.reduce(
+      (acc, e) => acc + (parseFloat(e.amount) || 0),
+      0
+    );
+    const savingsRate =
+      user.income > 0 ? ((user.savings / user.income) * 100).toFixed(1) : 0;
+
+    // savings insights
+    if (savingsRate < 20) {
+      suggestions.push(
+        `💸 Your savings rate is ${savingsRate}%. Aim for 20-30% of income.`
+      );
+      suggestions.push(
+        "💡 Tip: Automate savings (standing instruction) to prioritize saving."
+      );
+    } else {
+      suggestions.push(`✅ Great! You save ${savingsRate}% of your income.`);
+    }
+
+    // high expense warnings
+    user.expenses.forEach((exp) => {
+      if (exp.amount > (user.income || 1) * 0.3) {
+        suggestions.push(
+          `🚨 You spend a lot on ${exp.category}. Try reducing this to save more.`
+        );
+      }
+    });
+
+    if (user.income > 0 && totalExpenses / user.income > 0.7) {
+      suggestions.push(
+        "⚠️ Your expenses > 70% of income. Consider strict budgeting."
+      );
+    }
+
+    // Investment & policy suggestions
+    suggestions.push(
+      "🏦 Fixed Deposits (FD): SBI ~6.6%, HDFC ~6.5%, ICICI ~6.7% — 1–3 years recommended."
+    );
+    suggestions.push(
+      "🏛 PPF: ~7.1% (tax-free), 15-year tenure — long-term wealth & tax saving (80C)."
+    );
+    suggestions.push("📄 NSC: ~6.8%, 5-year lock-in, eligible for 80C.");
+    suggestions.push(
+      "🏦 RBI Floating Rate Bonds: Govt-backed, suitable for conservative investors."
+    );
+    suggestions.push(
+      "📈 SIP / Mutual Funds: Start small via SIPs for long-term growth."
+    );
+    suggestions.push(
+      "🛡 Ensure health and term insurance to protect financial goals."
+    );
+
+    return suggestions;
+  }
+
+  // Render suggestions in widget
+  async function displayAISuggestions() {
+    suggestionsList.innerHTML = "<em>Loading suggestions...</em>";
+    try {
+      const user = await fetchUserDataAuto();
+      console.log("AI Widget: user data ->", user);
+      const suggestions = generateSuggestions(user);
+      suggestionsList.innerHTML = suggestions
+        .map((s) => `<div style="margin-bottom:6px;">${s}</div>`)
+        .join("");
+    } catch (err) {
+      console.error("AI Widget: displayAISuggestions error", err);
+      suggestionsList.innerHTML = "<em>Failed to load suggestions.</em>";
+    }
+  }
+
+  // Hook up buttons
+  generateBtn.addEventListener("click", () => {
+    console.log("AI Widget: Generate clicked");
+    displayAISuggestions();
+  });
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      suggestionsList.innerHTML = "<em>Refreshing suggestions...</em>";
+      setTimeout(displayAISuggestions, 400);
+    });
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    widgetContainer.style.display =
+      widgetContainer.style.display === "block" ? "none" : "block";
+  });
+
+  // OPTIONAL: auto-refresh whenever your app updates transactions.
+  // If your app emits a custom event when data changes, you can listen to it:
+  // document.addEventListener("expensesUpdated", displayAISuggestions);
+});
