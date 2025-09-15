@@ -47,3 +47,18 @@ function validateEmail(email) {
       console.error(err);
     }
   }
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const signupPassword = document.getElementById("signup-password");
+  const toggleSignupEye = document.getElementById("toggleEye");
+
+  if (signupPassword && toggleSignupEye) {
+    toggleSignupEye.addEventListener("click", () => {
+      const isPassword = signupPassword.type === "password";
+      signupPassword.type = isPassword ? "text" : "password";
+      toggleSignupEye.classList.toggle("fa-eye");
+      toggleSignupEye.classList.toggle("fa-eye-slash");
+    });
+  }
+});
+
