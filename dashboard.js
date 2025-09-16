@@ -7,7 +7,7 @@ if (!currentUser) {
   window.location.href = "login.html";
 }
 
-// ========== On Page Load ==========
+// On Page Load
 document.addEventListener("DOMContentLoaded", () => {
   fetchTransactions();
 
@@ -18,9 +18,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Export buttons (you can expand later)
   document.getElementById("exportRecentCSV").addEventListener("click", exportRecentCSV);
-  document.getElementById("exportRecentPDF").addEventListener("click", () => alert("PDF export not yet implemented"));
-  document.getElementById("exportFullPDF").addEventListener("click", () => alert("Full PDF export not yet implemented"));
+  document.getElementById("exportRecentPDF").addEventListener("click", exportRecentPDF);
+  document.getElementById("exportFullPDF").addEventListener("click", exportFullPDF);
 });
+  
+  // Recent Transactions PDF
+
+function exportRecentPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("Recent Transactions", 14, 15);
+
+  // Prepare table data
+  const head = [["Date", "Category", "Description", "Amount"]];
+  const body = allTransactions.slice(0, 5).map(tx => [
+    tx.date,
+    tx.category,
+    tx.description,
+    `${tx.category === "Income" ? "+" : "-"}₹${Number(tx.amount).toFixed(2)}`
+  ]);
+
+  doc.autoTable({
+    head: head,
+    body: body,
+    startY: 25,
+    styles: { fontSize: 10 }
+  });
+
+  doc.save("recent_transactions.pdf");
+}
+
+//Full Transactions PDF
+
+function exportFullPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("All Transactions", 14, 15);
+
+  // Prepare table data
+  const head = [["Date", "Category", "Description", "Amount"]];
+  const body = allTransactions.map(tx => [
+    tx.date,
+    tx.category,
+    tx.description,
+    `${tx.category === "Income" ? "+" : "-"}₹${Number(tx.amount).toFixed(2)}`
+  ]);
+
+  doc.autoTable({
+    head: head,
+    body: body,
+    startY: 25,
+    styles: { fontSize: 10 }
+  });
+
+  doc.save("all_transactions.pdf");
+}
+
 
 // ========== Fetch Data from Backend ==========
 async function fetchTransactions() {
