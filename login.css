@@ -125,3 +125,6 @@ button:hover {
 .link a:hover {
   text-decoration: underline;
 }
+
+.google-btn { background-color: #333;color:#fff; }
+.github-btn { background-color: #333;color: #fff;}
