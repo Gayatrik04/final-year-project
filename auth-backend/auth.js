@@ -166,33 +166,6 @@ app.post("/login", (req, res) => {
   );
 });
 
-//////
-const OpenAI = require("openai");
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-app.post("/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ error: "Message required" });
-
-    console.log("Incoming chat request:", message);
-    console.log("API Key present?", !!process.env.OPENAI_API_KEY);
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // fast + cheaper model
-      messages: [{ role: "user", content: message }],
-    });
-
-    console.log("AI Response:", completion.choices[0].message.content);
-    res.json({ reply: completion.choices[0].message.content });
-  } catch (error) {
-    console.error("Chatbot Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "AI service error" });
-  }
-});
-
-//////
-
 app.listen(5000, () => {
   console.log("Server running on http://localhost:5000");
 });
