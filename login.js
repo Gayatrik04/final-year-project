@@ -22,7 +22,7 @@ async function handleLogin() {
       if (response.ok) {
         alert("Login successful!");
         localStorage.setItem("currentUser", data.userId);
-        window.location.href = "expensetracker.html"; // ✅ redirect
+        window.location.href = "expensetracker.html"; //  redirect
       } else {
         errorDiv.innerText = data.message || "Invalid email or password.";
       }
@@ -31,3 +31,17 @@ async function handleLogin() {
       errorDiv.innerText = "Server error. Please try again later.";
     }
   }
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const loginPassword = document.getElementById("login-password");
+  const toggleloginEye = document.getElementById("toggleEye");
+
+  if (loginPassword && toggleloginEye) {
+    toggleloginEye.addEventListener("click", () => {
+      const isPassword = loginPassword.type === "password";
+      loginPassword.type = isPassword ? "text" : "password";
+      toggleloginEye.classList.toggle("fa-eye");
+      toggleloginEye.classList.toggle("fa-eye-slash");
+    });
+  }
+});

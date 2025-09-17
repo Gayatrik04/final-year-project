@@ -4,23 +4,37 @@
   <meta charset="UTF-8" />
   <title>Login</title>
   <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="form-box">
     <h2>Login</h2>
+
     <div class="form-group">
       <label>Email:</label>
       <input type="email" id="login-email" />
     </div>
-    <div class="form-group">
-      <label>Password:</label>
-      <input type="password" id="login-password" />
+
+    <div class="form-group password-group">
+      <label for="login-password">Password:</label>
+      <input type="password" id="login-password" required />
+      <i class="fa-solid fa-eye toggle-eye" id="toggleEye"></i>
     </div>
+
     <div class="error" id="login-error"></div>
     <button onclick="handleLogin()">Login</button>
     <div class="link">
       <a href="signup.html" style="color: #ffffff;">Don't have an account? Sign Up</a>
     </div>
+
+    <button class="google-btn" onclick="window.location.href='http://localhost:5000/auth/google'">
+    <i class="fa-brands fa-google"></i> Continue with Google
+  </button>
+
+  <button class="github-btn" onclick="window.location.href='http://localhost:5000/auth/github'">
+  <i class="fa-brands fa-github"></i> Continue with GitHub
+  </button>
+  
   </div>
 
 <script src="login.js"></script>

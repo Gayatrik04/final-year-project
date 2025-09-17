@@ -7,7 +7,7 @@ if (!currentUser) {
   window.location.href = "login.html";
 }
 
-// ========== On Page Load ==========
+// On Page Load
 document.addEventListener("DOMContentLoaded", () => {
   fetchTransactions();
 

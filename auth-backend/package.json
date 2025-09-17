@@ -13,8 +13,18 @@
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
+<<<<<<< HEAD
     "mysql2": "^3.14.5"
   },
   "type": "commonjs"
+=======
+    "express-session": "^1.18.2",
+    "mysql2": "^3.14.4",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0"
+  }
+>>>>>>> 03cd67c5891ce5d254d0bb8b02f5268613a162ab
 }
