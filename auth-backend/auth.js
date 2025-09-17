@@ -175,21 +175,27 @@ app.post("/chat", async (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: "Message required" });
 
+    console.log("Incoming chat request:", message);
+    console.log("API Key present?", !!process.env.OPENAI_API_KEY);
+
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // can also use gpt-4 or gpt-3.5-turbo
+      model: "gpt-4o-mini", // fast + cheaper model
       messages: [{ role: "user", content: message }],
     });
 
+    console.log("AI Response:", completion.choices[0].message.content);
     res.json({ reply: completion.choices[0].message.content });
   } catch (error) {
-    console.error("Chatbot Error:", error);
+    console.error("Chatbot Error:", error.response?.data || error.message);
     res.status(500).json({ error: "AI service error" });
   }
 });
+// other routes...
 
-app.get("/ping", (req, res) => {
-  res.send("✅ Backend is running");
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
 
 //////
 
