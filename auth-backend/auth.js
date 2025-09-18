@@ -1,9 +1,9 @@
 require("dotenv").config();
 
-console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
+/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
 console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
-console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);
+console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);*/
 
 const express = require("express");
 const mysql = require("mysql2");
@@ -34,7 +34,7 @@ app.use(passport.session());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234", // your MySQL password
+  password: "", // your MySQL password
   database: "auth_dbb",
 });
 
@@ -106,6 +106,13 @@ passport.deserializeUser((id, done) => {
     done(null, results[0]);
   });
 });
+
+
+
+        
+
+
+
 //OAuth Routes
 // Google
 app.get(
@@ -137,8 +144,15 @@ app.post("/signup", async (req, res) => {
     "INSERT INTO users (email, password) VALUES (?, ?)",
     [email, hashedPassword],
     (err, result) => {
-      if (err) return res.status(500).json({ error: err });
-      res.json({ message: "User registered successfully!" });
+     if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ message: "Email already registered!" });
+        }
+        return res.status(500).json({ error: err });
+      }
+
+      // Return userId as well
+      res.json({ message: "User registered successfully!", userId: result.insertId });
     }
   );
 });
@@ -196,6 +210,8 @@ app.listen(5000, () => {
   console.log("Server running on http://localhost:5000");
 });
 
+
+
 // add a transaction
 app.post("/transactions", (req, res) => {
   const { userId, date, amount, category, description } = req.body;
@@ -243,52 +259,4 @@ app.put("/transactions/:id", (req, res) => {
       res.json({ message: "Transaction updated" });
     }
   );
-});
-
-//
-app.post("/groups", async (req, res) => {
-  const { name, createdBy } = req.body;
-  try {
-    const [result] = await db.query(
-      "INSERT INTO groups (name, created_by) VALUES (?, ?)",
-      [name, createdBy]
-    );
-    // Add creator as member too
-    await db.query(
-      "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
-      [result.insertId, createdBy]
-    );
-    res.json({ id: result.insertId, name });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to create group" });
-  }
-});
-
-app.get("/groups/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const [rows] = await db.query(
-      `SELECT g.id, g.name 
-       FROM groups g
-       JOIN group_members gm ON g.id = gm.group_id
-       WHERE gm.user_id = ?`,
-      [userId]
-    );
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch groups" });
-  }
-});
-
-app.get("/groups/:groupId/transactions", async (req, res) => {
-  const groupId = req.params.groupId;
-  try {
-    const [rows] = await db.query(
-      "SELECT * FROM transactions WHERE group_id = ?",
-      [groupId]
-    );
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch group transactions" });
-  }
 });

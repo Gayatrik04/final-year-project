@@ -20,17 +20,17 @@ async function handleLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Login successful!");
-        localStorage.setItem("currentUser", data.userId);
-        window.location.href = "expensetracker.html"; //  redirect
-      } else {
-        errorDiv.innerText = data.message || "Invalid email or password.";
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      errorDiv.innerText = "Server error. Please try again later.";
+      localStorage.setItem("currentUser", data.userId);
+      window.location.href = "dashboard.html"; // redirect to dashboard
+    } else {
+      errorDiv.innerText = data.message || "Login failed.";
     }
+
+  } catch (err) {
+    errorDiv.innerText = "Error connecting to server.";
+    console.error(err);
   }
+}
 
   document.addEventListener("DOMContentLoaded", () => {
   const loginPassword = document.getElementById("login-password");
