@@ -65,6 +65,11 @@
       <input type="number" id="limit" placeholder="Enter monthly limit">
     </div>
 
+    <div class="form-group">
+  <label for="savingGoalDate">Saving Goal Date:</label>
+  <input type="date" id="savingGoalDate">
+    </div>
+    <div id="ai-suggestion" class="ai-suggestion hidden"></div>
     <div class="controls">
 
       <button onclick="addExpense()">Add Expense</button>
@@ -78,7 +83,6 @@
       </div>
 </div>
 
-
   <!-- Totals -->
   <div class="totals">
     <div>Total Income: ₹<span id="total-income">0</span></div>
@@ -89,7 +93,6 @@
   <div id="limit-warning" class="limit-warning hidden">
     ⚠️ You have exceeded your spending limit!
   </div>
-  
 
   <table>
     <thead>
@@ -105,7 +108,11 @@
       <!-- Dynamic rows -->
     </tbody>
   </table>
+
 </div>
+
+<script src="chatbot.js"></script>
+
 <script src="expensetracker.js"></script>
 </body>
 </html>

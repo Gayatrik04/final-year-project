@@ -201,5 +201,26 @@ td.description-cell {
   padding: 6px 8px;
 }
 
+.ai-suggestion {
+  margin-top: 10px;
+  padding: 12px;
+  background-color: #2a2a2a;
+  color: #03dac6;
+  font-weight: bold;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.ai-suggestion.hidden {
+  display: none;
+}
+
+
+
+
+
+
+
+
 
 
