@@ -23,34 +23,6 @@ if (savedLimit) limitInput.value = savedLimit;
 const targetDateInput = document.getElementById("targetDate");
 const aiSuggestionDiv = document.getElementById("ai-suggestion");
 
-// --- Add this near the top of expensetracker.js ---
-function computeAndRenderMonthlyPrediction(transactions) {
-  if (!Array.isArray(transactions)) {
-    console.warn(
-      "computeAndRenderMonthlyPrediction called with invalid data:",
-      transactions
-    );
-    return;
-  }
-
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-
-  let monthlyTotal = 0;
-  transactions.forEach((tx) => {
-    const txDate = new Date(tx.date);
-    if (
-      txDate.getMonth() === currentMonth &&
-      txDate.getFullYear() === currentYear &&
-      tx.category !== "Income"
-    ) {
-      monthlyTotal += parseFloat(tx.amount) || 0;
-    }
-  });
-
-  console.log(`Predicted spending for this month: ₹${monthlyTotal.toFixed(2)}`);
-}
-
 function updateTotals() {
   let totalIncome = 0,
     totalExpense = 0;
