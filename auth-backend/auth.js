@@ -1,4 +1,7 @@
 require("dotenv").config();
+const fetch = require("node-fetch"); // if using Node 18+, native fetch works
+
+app.use(express.json());
 
 /*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
@@ -208,8 +211,13 @@ async function someChatbotFunction(message) {
 // Chat Route
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
+
   console.log("Step 1: Route hit");
   console.log("Request body:", req.body);
+
+  if (!message) {
+    return res.status(400).json({ reply: "Message is required." });
+  }
 
   try {
     console.log("Step 2: Calling chatbot API...");
@@ -221,32 +229,40 @@ app.post("/chat", async (req, res) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "HTTP-Referer": "http://localhost:5000", // optional, helps OpenRouter
+          "HTTP-Referer": "http://localhost:5000", // optional
           "X-Title": "Expense Tracker Bot",
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3-8b-instruct", // free model
+          model: "meta-llama/llama-3-8b-instruct",
           messages: [{ role: "user", content: message }],
         }),
       }
     );
 
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("OpenRouter API error:", errText);
+      return res.status(500).json({ reply: "AI API returned an error." });
+    }
+
     const data = await response.json();
     console.log("Step 3: Got response:", data);
 
-    // Return the chatbot's reply back to the frontend
-    res.json({ reply: data.choices[0].message.content });
+    // Safely extract the AI reply
+    const aiMessage =
+      data?.choices?.[0]?.message?.content ||
+      "Sorry, I couldn't process your request right now.";
+
+    // Return the AI reply to the frontend
+    res.json({ reply: aiMessage });
   } catch (err) {
     console.error("Chat fetch error:", err);
-    res
-      .status(500)
-      .json({
-        reply:
-          "Sorry, I couldn't process your request right now. Please try again later.",
-      });
+    res.status(500).json({
+      reply:
+        "Sorry, I couldn't process your request right now. Please try again later.",
+    });
   }
 });
-
 ////
 
 app.get("/expensetracker", (req, res) => {

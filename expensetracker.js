@@ -335,3 +335,6 @@ chatbotSend.addEventListener("click", sendChatbotMessage);
 chatbotInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendChatbotMessage();
 });
+
+const chatbotClear = document.getElementById("chatbot-clear");
+const chatbotClose = document.getElementById("chatbot-close");
