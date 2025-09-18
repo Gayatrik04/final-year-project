@@ -187,11 +187,17 @@ function applySort() {
 }
 
 async function fetchTransactions() {
-  const response = await fetch(
-    `http://localhost:5000/transactions/${currentUser}`
-  );
-  transactions = await response.json();
-  applySort();
+  try {
+    const response = await fetch(
+      `http://localhost:5000/transactions/${currentUser}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch transactions");
+    transactions = await response.json();
+    applySort();
+  } catch (err) {
+    console.error("Could not fetch transactions:", err);
+    transactions = []; // fallback to empty list
+  }
 }
 
 fetchTransactions();

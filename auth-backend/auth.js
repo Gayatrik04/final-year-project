@@ -182,6 +182,17 @@ app.post("/login", (req, res) => {
   );
 });
 
+//chatbot
+app.post("/chat", (req, res) => {
+  const { message } = req.body; // read message from frontend
+  if (!message) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  // For now, just reply back with the same message
+  res.json({ reply: `You said: ${message}` });
+});
+
 // Start Server
 
 app.listen(PORT, () =>
