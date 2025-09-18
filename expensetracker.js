@@ -34,8 +34,6 @@ function updateTotals() {
     } else {
       totalExpense += amt;
     }
-    //updateTotals()
-    computeAndRenderMonthlyPrediction(transactions); //
   });
 
   incomeDisplay.textContent = totalIncome.toFixed(2);

@@ -34,7 +34,7 @@ app.use(passport.session());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "", // your MySQL password
+  password: "1234", // your MySQL password
   database: "auth_dbb",
 });
 
@@ -107,12 +107,6 @@ passport.deserializeUser((id, done) => {
   });
 });
 
-
-
-        
-
-
-
 //OAuth Routes
 // Google
 app.get(
@@ -144,15 +138,18 @@ app.post("/signup", async (req, res) => {
     "INSERT INTO users (email, password) VALUES (?, ?)",
     [email, hashedPassword],
     (err, result) => {
-     if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
+      if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
           return res.status(400).json({ message: "Email already registered!" });
         }
         return res.status(500).json({ error: err });
       }
 
       // Return userId as well
-      res.json({ message: "User registered successfully!", userId: result.insertId });
+      res.json({
+        message: "User registered successfully!",
+        userId: result.insertId,
+      });
     }
   );
 });
@@ -187,30 +184,42 @@ app.post("/login", (req, res) => {
 const OpenAI = require("openai");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Example: server.js or routes/chat.js
 app.post("/chat", async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ error: "Message required" });
+    console.log("Received message:", req.body);
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // cheaper + fast model
-      messages: [{ role: "user", content: message }],
-    });
+    // Example: calling OpenAI or chatbot logic
+    const response = await someChatbotFunction(req.body.message);
 
-    res.json({ reply: completion.choices[0].message.content });
+    res.json({ reply: response });
   } catch (error) {
-    console.error("Chatbot Error:", error);
-    res.status(500).json({ error: "AI service error" });
+    console.error("Chat endpoint error:", error);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: error.message });
   }
 });
+
+console.log("Step 1: Route hit");
+console.log("Request body:", req.body);
+
+// Wrap external calls with try/catch
+try {
+  console.log("Step 2: Calling chatbot API...");
+  const result = await someChatbotFunction(req.body.message);
+  console.log("Step 3: Got response:", result);
+  res.json({ reply: result });
+} catch (err) {
+  console.error("Error at Step 2:", err);
+  res.status(500).json({ error: err.message });
+}
 
 ////
 
 app.listen(5000, () => {
   console.log("Server running on http://localhost:5000");
 });
-
-
 
 // add a transaction
 app.post("/transactions", (req, res) => {

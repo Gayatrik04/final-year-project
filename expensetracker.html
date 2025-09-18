@@ -136,10 +136,13 @@ function addMessage(sender, text) {
 chatbotSend.addEventListener("click", async () => {
   const message = chatbotInput.value.trim();
   if (!message) return;
+
   addMessage("user", "👤 " + message);
   chatbotInput.value = "";
 
+  // Add a temporary "Thinking..." message
   addMessage("bot", "⏳ Thinking...");
+
   try {
     const res = await fetch("http://localhost:5000/chat", {
       method: "POST",
@@ -147,12 +150,30 @@ chatbotSend.addEventListener("click", async () => {
       body: JSON.stringify({ message }),
     });
 
-    const data = await res.json();
-    chatbotMessages.lastChild.textContent = "🤖 " + (data.reply || "No response");
+    if (!res.ok) {
+      // Handle HTTP errors (like 500)
+      chatbotMessages.lastChild.textContent = `⚠️ Server error (${res.status})`;
+      return;
+    }
+
+    // Try parsing the JSON safely
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      chatbotMessages.lastChild.textContent = "⚠️ Invalid server response";
+      return;
+    }
+
+    chatbotMessages.lastChild.textContent =
+      "🤖 " + (data.reply || "No response from server");
   } catch (err) {
-    chatbotMessages.lastChild.textContent = "⚠️ Error connecting to AI";
+    // Handle network errors
+    chatbotMessages.lastChild.textContent = "⚠️ Could not connect to server";
+    console.error("Chat fetch error:", err);
   }
 });
+
 </script>
 <script src="expensetracker.js"></script>
 </body>
