@@ -215,6 +215,52 @@ td.description-cell {
   display: none;
 }
 
+#chatbot-widget {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 10px;
+  width: 300px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+#chatbot-header {
+  background: #bb86fc;
+  color: black;
+  padding: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+#chatbot-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+#chatbot-messages .user { text-align: right; margin-bottom: 6px; color: #03dac6; }
+#chatbot-messages .bot { text-align: left; margin-bottom: 6px; color: #ffffff; }
+#chatbot-input {
+  border: none;
+  outline: none;
+  padding: 8px;
+  flex: 1;
+  background: #2c2c2c;
+  color: white;
+}
+#chatbot-send {
+  background: #bb86fc;
+  color: black;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
 
 
