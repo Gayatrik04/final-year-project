@@ -9,6 +9,13 @@ const session = require("express-session");
 const path = require("path");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
+const fetch = require("node-fetch");
+
+/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID); 
+console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET); 
+console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID); 
+console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET); 
+console.log("OpenRouter API Key:", process.env.OPENROUTER_API_KEY);*/
 
 dotenv.config();
 const app = express();
@@ -28,6 +35,24 @@ app.use(
     saveUninitialized: true,
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
+
+// CSP middleware
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; connect-src 'self' http://localhost:5000"
+  );
+  next();
+});
+
+// Suppress DevTools warning
+
+app.get("/.well-known/appspecific/com.chrome.devtools.json", (req, res) => {
+  res.json({ message: "OK" });
+});
 
 // MySQL Connection
 
@@ -182,19 +207,97 @@ app.post("/login", (req, res) => {
   );
 });
 
-//chatbot
-app.post("/chat", (req, res) => {
-  const { message } = req.body; // read message from frontend
-  if (!message) {
-    return res.status(400).json({ error: "Message is required" });
-  }
+// Chatbot Route Example
 
-  // For now, just reply back with the same message
-  res.json({ reply: `You said: ${message}` });
+app.post("/chat", async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ reply: "Message is required." });
+
+  try {
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "meta-llama/llama-3-8b-instruct",
+          messages: [{ role: "user", content: message }],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("OpenRouter API error:", errText);
+      return res.status(500).json({ reply: "AI API returned an error." });
+    }
+
+    const data = await response.json();
+    const aiMessage =
+      data?.choices?.[0]?.message?.content || "Sorry, no response.";
+    res.json({ reply: aiMessage });
+  } catch (err) {
+    console.error("Chat fetch error:", err);
+    res.status(500).json({ reply: "Sorry, could not process your request." });
+  }
+});
+
+// Expense Tracker & Transactions Routes
+
+app.get("/expensetracker", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "expensetracker.html"));
+});
+
+app.post("/transactions", (req, res) => {
+  const { userId, date, amount, category, description } = req.body;
+  db.query(
+    "INSERT INTO transactions (user_id, date, amount, category, description) VALUES (?, ?, ?, ?, ?)",
+    [userId, date, amount, category, description],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ id: result.insertId, message: "Transaction added" });
+    }
+  );
+});
+
+app.get("/transactions/:userId", (req, res) => {
+  const { userId } = req.params;
+  db.query(
+    "SELECT id, user_id, DATE_FORMAT(date, '%Y-%m-%d') AS date, amount, category, description FROM transactions WHERE user_id = ? ORDER BY date DESC",
+    [userId],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+app.put("/transactions/:id", (req, res) => {
+  const { id } = req.params;
+  const { date, amount, category, description } = req.body;
+  db.query(
+    "UPDATE transactions SET date=?, amount=?, category=?, description=? WHERE id=?",
+    [date, amount, category, description, id],
+    (err) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ message: "Transaction updated" });
+    }
+  );
+});
+
+app.delete("/transactions/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM transactions WHERE id = ?", [id], (err) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    res.json({ message: "Transaction deleted" });
+  });
 });
 
 // Start Server
 
-app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
