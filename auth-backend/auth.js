@@ -12,12 +12,15 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
+const path = require("path");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "..")));
 
 //session & passport
 app.use(
@@ -34,16 +37,14 @@ app.use(passport.session());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234", // your MySQL password
+  password: "gayatri@MYSQL", // your MySQL password
   database: "auth_dbb",
 });
 
 db.connect((err) => {
-  if (err) throw err;
-  // Example inside POST /transactions
   if (err) {
-    console.error("🔴 MySQL Error:", err); // <-- add this line
-    return res.status(500).json({ error: err.sqlMessage }); // <-- show actual MySQL error
+    console.error("MySQL Error:", err);
+    return;
   }
   console.log("MySQL Connected...");
 });
@@ -108,11 +109,6 @@ passport.deserializeUser((id, done) => {
 });
 
 
-
-        
-
-
-
 //OAuth Routes
 // Google
 app.get(
@@ -121,8 +117,10 @@ app.get(
 );
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup" }),
-  (req, res) => res.redirect("/dashboard")
+  passport.authenticate("google", { failureRedirect: "/signup." }),
+  (req, res) => {
+    res.redirect(`/expensetracker.html?userId=${req.user.id}`);
+  }
 );
 
 // GitHub
@@ -130,7 +128,9 @@ app.get("/auth/github", passport.authenticate("github"));
 app.get(
   "/auth/github/callback",
   passport.authenticate("github", { failureRedirect: "/signup" }),
-  (req, res) => res.redirect("/dashboard")
+  (req, res) => {
+    res.redirect(`/expensetracker.html?userId=${req.user.id}`);
+  }
 );
 
 // Signup Route
@@ -146,13 +146,13 @@ app.post("/signup", async (req, res) => {
     (err, result) => {
      if (err) {
         if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ message: "Email already registered!" });
+          return res.status(400).send("Email already registered!");
         }
-        return res.status(500).json({ error: err });
+        return res.status(500).send("Database error");
       }
 
       // Return userId as well
-      res.json({ message: "User registered successfully!", userId: result.insertId });
+       res.redirect("/login.html");
     }
   );
 });
@@ -165,26 +165,24 @@ app.post("/login", (req, res) => {
     "SELECT * FROM users WHERE email = ?",
     [email],
     async (err, results) => {
-      if (err) return res.status(500).json({ error: err });
+      if (err) return res.status(500).send("Database error");
       if (results.length === 0)
-        return res.status(400).json({ message: "User not found!" });
+        return res.status(400).send( "User not found!");
 
       const user = results[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid)
-        return res.status(400).json({ message: "Invalid password!" });
+        return res.status(400).send("Invalid password!");
 
-      res.json({ message: "Login successful!", userId: user.id });
+      res.redirect("/expensetracker");
     }
   );
 });
 
-app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000");
+app.get("/expensetracker", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "expensetracker.html"));
 });
-
-
 
 // add a transaction
 app.post("/transactions", (req, res) => {
@@ -233,4 +231,8 @@ app.put("/transactions/:id", (req, res) => {
       res.json({ message: "Transaction updated" });
     }
   );
+});
+
+app.listen(5000, () => {
+  console.log("Server running on http://localhost:5000");
 });

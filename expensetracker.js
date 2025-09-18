@@ -1,10 +1,20 @@
 let editIndex = -1;
-let currentUser = localStorage.getItem("currentUser");
+
+// Get userId (OAuth login)
+const urlParams = new URLSearchParams(window.location.search);
+const oauthUserId = urlParams.get("userId");
+
+// Check localStorage first, then OAuth query param
+let currentUser = localStorage.getItem("currentUser") || oauthUserId;
 
 if (!currentUser) {
   alert("Please login first!");
   window.location.href = "login.html";
+} else {
+  // store for later use if logged in via OAuth
+  localStorage.setItem("currentUser", currentUser);
 }
+
 
 let transactions = [];
 
@@ -16,12 +26,13 @@ const actionButton = document.querySelector("button");
 const sortSelect = document.getElementById("sortBy");
 const limitInput = document.getElementById("limit");
 const limitWarning = document.getElementById("limit-warning");
+const targetDateInput = document.getElementById("targetDate");
+const aiSuggestionDiv = document.getElementById("ai-suggestion");
 
 const savedLimit = localStorage.getItem(currentUser + "_limit");
 if (savedLimit) limitInput.value = savedLimit;
-//
-const targetDateInput = document.getElementById("targetDate");
-const aiSuggestionDiv = document.getElementById("ai-suggestion");
+
+
 
 // --- Add this near the top of expensetracker.js ---
 function computeAndRenderMonthlyPrediction(transactions) {

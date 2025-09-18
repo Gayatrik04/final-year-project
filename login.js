@@ -21,7 +21,7 @@ async function handleLogin() {
 
       if (response.ok) {
       localStorage.setItem("currentUser", data.userId);
-      window.location.href = "dashboard.html"; // redirect to dashboard
+      window.location.href = "expensetracker.html"; // redirect to dashboard
     } else {
       errorDiv.innerText = data.message || "Login failed.";
     }
