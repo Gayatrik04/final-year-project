@@ -11,7 +11,6 @@ if (!currentUser) {
   alert("Please login first!");
   window.location.href = "login.html";
 } else {
-  // store for later use if logged in via OAuth
   localStorage.setItem("currentUser", currentUser);
 }
 
@@ -25,23 +24,22 @@ const actionButton = document.querySelector("button");
 const sortSelect = document.getElementById("sortBy");
 const limitInput = document.getElementById("limit");
 const limitWarning = document.getElementById("limit-warning");
-const targetDateInput = document.getElementById("targetDate");
+const savingGoalDateInput = document.getElementById("savingGoalDate");
 const aiSuggestionDiv = document.getElementById("ai-suggestion");
 
+// Load saved limit
 const savedLimit = localStorage.getItem(currentUser + "_limit");
 if (savedLimit) limitInput.value = savedLimit;
 
+// ---------------------- Totals & AI Suggestion ----------------------
 function updateTotals() {
   let totalIncome = 0,
     totalExpense = 0;
 
   transactions.forEach((tx) => {
     const amt = Number(tx.amount);
-    if (tx.category === "Income") {
-      totalIncome += amt;
-    } else {
-      totalExpense += amt;
-    }
+    if (tx.category === "Income") totalIncome += amt;
+    else totalExpense += amt;
   });
 
   incomeDisplay.textContent = totalIncome.toFixed(2);
@@ -57,8 +55,6 @@ function updateTotals() {
 
   updateAISuggestion(limitValue, totalExpense);
 }
-
-const savingGoalDateInput = document.getElementById("savingGoalDate");
 
 function updateAISuggestion(limitValue, totalExpense) {
   const savingGoalDate = savingGoalDateInput.value;
@@ -91,10 +87,10 @@ function updateAISuggestion(limitValue, totalExpense) {
   aiSuggestionDiv.classList.remove("hidden");
 }
 
-limitInput.addEventListener("input", () => updateTotals());
-savingGoalDateInput.addEventListener("change", () => updateTotals());
+limitInput.addEventListener("input", updateTotals);
+savingGoalDateInput.addEventListener("change", updateTotals);
 
-//
+// ---------------------- Transaction CRUD ----------------------
 function clearForm() {
   document.getElementById("date").value = "";
   document.getElementById("amount").value = "";
@@ -118,7 +114,6 @@ function renderTable() {
         <span class="icon-btn delete-btn" onclick="deleteTransaction(${index})" title="Delete">🗑️</span>
       </td>
     `;
-    //those are unicode emoji  built into the os/browser
   });
 
   updateTotals();
@@ -150,18 +145,16 @@ async function addExpense() {
       body: JSON.stringify(transaction),
     });
   } else {
-    // Update existing → PUT
     const id = transactions[editIndex].id;
     await fetch(`http://localhost:5000/transactions/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(transaction),
     });
-    fetchTransactions();
   }
 
   clearForm();
-  fetchTransactions(); // refresh list from backend
+  fetchTransactions();
 }
 
 function editTransaction(index) {
@@ -175,26 +168,21 @@ function editTransaction(index) {
 }
 
 async function deleteTransaction(index) {
-  const id = transactions[index].id; // id comes from DB
+  const id = transactions[index].id;
   if (confirm("Are you sure you want to delete this transaction?")) {
     await fetch(`http://localhost:5000/transactions/${id}`, {
       method: "DELETE",
     });
-    fetchTransactions(); // reload fresh data
+    fetchTransactions();
   }
 }
 
 function applySort() {
   const sortBy = sortSelect.value;
-
-  if (sortBy === "date") {
-    // Sort by date (newest first)
+  if (sortBy === "date")
     transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-  } else if (sortBy === "category") {
-    // Sort alphabetically by category
+  else if (sortBy === "category")
     transactions.sort((a, b) => a.category.localeCompare(b.category));
-  }
-
   renderTable();
 }
 
@@ -203,138 +191,69 @@ async function fetchTransactions() {
     `http://localhost:5000/transactions/${currentUser}`
   );
   transactions = await response.json();
-  applySort(); // keeps sorting
+  applySort();
 }
 
 fetchTransactions();
 
-//logout
+// ---------------------- Logout ----------------------
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("currentUser");
   window.location.href = "login.html";
 });
 
-// Example: fetch transactions for userId 1
-fetch("http://localhost:5000/transactions/1")
-  .then((res) => res.json())
-  .then((data) => {
-    console.log("Transactions:", data);
-    // You can render this data in your page
-  })
-  .catch((err) => console.error("Error fetching transactions:", err));
+// ---------------------- AI Chatbot ----------------------
+const chatbotToggle = document.getElementById("chatbot-toggle");
+const chatbotWidget = document.getElementById("chatbot-widget");
+const chatbotMessages = document.getElementById("chatbot-messages");
+const chatbotInput = document.getElementById("chatbot-input");
+const chatbotSend = document.getElementById("chatbot-send");
 
-//AI chatbot
-
-const chatbotWidget2 = document.getElementById("chatbot-widget");
-const chatbotMessages2 = document.getElementById("chatbot-messages");
-const chatbotInput2 = document.getElementById("chatbot-input");
-const chatbotSend2 = document.getElementById("chatbot-send");
-
-function addMessage2(sender, text) {
+function addChatMessage(sender, text) {
   const msg = document.createElement("div");
   msg.className = sender;
   msg.textContent = text;
-  chatbotMessages2.appendChild(msg);
-  chatbotMessages2.scrollTop = chatbotMessages2.scrollHeight;
+  chatbotMessages.appendChild(msg);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
 }
 
-chatbotSend2.addEventListener("click", async () => {
-  const message = chatbotInput2.value.trim();
-  if (!message) return;
+async function sendChatbotMessage() {
+  const msg = chatbotInput.value.trim();
+  if (!msg) return;
 
-  addMessage2("user", "👤 " + message);
-  chatbotInput2.value = "";
-
-  // Temporary "Thinking..." message
-  addMessage2("bot", "⏳ Thinking...");
+  addChatMessage("user", "👤 " + msg);
+  chatbotInput.value = "";
+  addChatMessage("bot", "⏳ Thinking...");
 
   try {
     const res = await fetch("http://localhost:5000/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message: msg }),
     });
 
     if (!res.ok) {
-      chatbotMessages2.lastChild.textContent = `⚠️ Server error (${res.status})`;
+      chatbotMessages.lastChild.textContent = `⚠️ Server error (${res.status})`;
       return;
     }
 
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseErr) {
-      chatbotMessages2.lastChild.textContent = "⚠️ Invalid server response";
-      return;
-    }
-
-    chatbotMessages2.lastChild.textContent =
+    const data = await res.json();
+    chatbotMessages.lastChild.textContent =
       "🤖 " + (data.reply || "No response from server");
   } catch (err) {
-    chatbotMessages2.lastChild.textContent = "⚠️ Could not connect to server";
+    chatbotMessages.lastChild.textContent = "⚠️ Could not connect to server";
     console.error("Chat fetch error:", err);
-  }
-});
-
-//chatbot button toggle
-// Chatbot elements
-const chatbotToggle = document.getElementById("chatbot-toggle");
-const chatbotWidget = document.getElementById("chatbot-widget");
-const chatbotSend = document.getElementById("chatbot-send");
-const chatbotInput = document.getElementById("chatbot-input");
-const chatbotMessages = document.getElementById("chatbot-messages");
-
-// Toggle chatbot visibility
-chatbotToggle.addEventListener("click", () => {
-  if (chatbotWidget.style.display === "flex") {
-    chatbotWidget.style.display = "none";
-  } else {
-    chatbotWidget.style.display = "flex";
-  }
-});
-
-// Send message function
-async function sendChatbotMessage() {
-  const msg = chatbotInput.value.trim();
-  if (!msg) return;
-
-  // Add user message
-  const userDiv = document.createElement("div");
-  userDiv.textContent = "You: " + msg;
-  userDiv.style.textAlign = "right";
-  userDiv.style.margin = "5px 0";
-  chatbotMessages.appendChild(userDiv);
-  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-  chatbotInput.value = "";
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg }),
-    });
-    const data = await res.json();
-
-    const botDiv = document.createElement("div");
-    botDiv.textContent = "Bot: " + data.reply;
-    botDiv.style.textAlign = "left";
-    botDiv.style.margin = "5px 0";
-    chatbotMessages.appendChild(botDiv);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-  } catch (err) {
-    const errDiv = document.createElement("div");
-    errDiv.textContent = "Bot: Something went wrong!";
-    errDiv.style.color = "red";
-    chatbotMessages.appendChild(errDiv);
   }
 }
 
-// Send on button click or Enter key
+// Event listeners
 chatbotSend.addEventListener("click", sendChatbotMessage);
 chatbotInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendChatbotMessage();
 });
 
-const chatbotClear = document.getElementById("chatbot-clear");
-const chatbotClose = document.getElementById("chatbot-close");
+// Toggle chatbot
+chatbotToggle.addEventListener("click", () => {
+  chatbotWidget.style.display =
+    chatbotWidget.style.display === "flex" ? "none" : "flex";
+});

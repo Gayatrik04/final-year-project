@@ -1,14 +1,5 @@
-require("dotenv").config();
-const fetch = require("node-fetch"); // if using Node 18+, native fetch works
-
-app.use(express.json());
-
-/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
-console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
-console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);*/
-
 const express = require("express");
+const dotenv = require("dotenv");
 const mysql = require("mysql2");
 const bcrypt = require("bcryptjs");
 const bodyParser = require("body-parser");
@@ -18,8 +9,19 @@ const session = require("express-session");
 const path = require("path");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
+const fetch = require("node-fetch"); // Node 18+ has native fetch, but this works too
 
+// Load environment variables
+dotenv.config();
 const app = express();
+app.use(express.json());
+
+/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
+console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
+console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);
+console.log("OpenRouter API Key:", process.env.OPENROUTER_API_KEY); // tes*/
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
