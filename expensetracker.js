@@ -15,7 +15,6 @@ if (!currentUser) {
   localStorage.setItem("currentUser", currentUser);
 }
 
-
 let transactions = [];
 
 const incomeDisplay = document.getElementById("total-income");
@@ -31,8 +30,6 @@ const aiSuggestionDiv = document.getElementById("ai-suggestion");
 
 const savedLimit = localStorage.getItem(currentUser + "_limit");
 if (savedLimit) limitInput.value = savedLimit;
-
-
 
 function updateTotals() {
   let totalIncome = 0,
@@ -215,4 +212,126 @@ fetchTransactions();
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("currentUser");
   window.location.href = "login.html";
+});
+
+// Example: fetch transactions for userId 1
+fetch("http://localhost:5000/transactions/1")
+  .then((res) => res.json())
+  .then((data) => {
+    console.log("Transactions:", data);
+    // You can render this data in your page
+  })
+  .catch((err) => console.error("Error fetching transactions:", err));
+
+//AI chatbot
+
+const chatbotWidget2 = document.getElementById("chatbot-widget");
+const chatbotMessages2 = document.getElementById("chatbot-messages");
+const chatbotInput2 = document.getElementById("chatbot-input");
+const chatbotSend2 = document.getElementById("chatbot-send");
+
+function addMessage2(sender, text) {
+  const msg = document.createElement("div");
+  msg.className = sender;
+  msg.textContent = text;
+  chatbotMessages2.appendChild(msg);
+  chatbotMessages2.scrollTop = chatbotMessages2.scrollHeight;
+}
+
+chatbotSend2.addEventListener("click", async () => {
+  const message = chatbotInput2.value.trim();
+  if (!message) return;
+
+  addMessage2("user", "👤 " + message);
+  chatbotInput2.value = "";
+
+  // Temporary "Thinking..." message
+  addMessage2("bot", "⏳ Thinking...");
+
+  try {
+    const res = await fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!res.ok) {
+      chatbotMessages2.lastChild.textContent = `⚠️ Server error (${res.status})`;
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      chatbotMessages2.lastChild.textContent = "⚠️ Invalid server response";
+      return;
+    }
+
+    chatbotMessages2.lastChild.textContent =
+      "🤖 " + (data.reply || "No response from server");
+  } catch (err) {
+    chatbotMessages2.lastChild.textContent = "⚠️ Could not connect to server";
+    console.error("Chat fetch error:", err);
+  }
+});
+
+//chatbot button toggle
+// Chatbot elements
+const chatbotToggle = document.getElementById("chatbot-toggle");
+const chatbotWidget = document.getElementById("chatbot-widget");
+const chatbotSend = document.getElementById("chatbot-send");
+const chatbotInput = document.getElementById("chatbot-input");
+const chatbotMessages = document.getElementById("chatbot-messages");
+
+// Toggle chatbot visibility
+chatbotToggle.addEventListener("click", () => {
+  if (chatbotWidget.style.display === "flex") {
+    chatbotWidget.style.display = "none";
+  } else {
+    chatbotWidget.style.display = "flex";
+  }
+});
+
+// Send message function
+async function sendChatbotMessage() {
+  const msg = chatbotInput.value.trim();
+  if (!msg) return;
+
+  // Add user message
+  const userDiv = document.createElement("div");
+  userDiv.textContent = "You: " + msg;
+  userDiv.style.textAlign = "right";
+  userDiv.style.margin = "5px 0";
+  chatbotMessages.appendChild(userDiv);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+
+  chatbotInput.value = "";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await res.json();
+
+    const botDiv = document.createElement("div");
+    botDiv.textContent = "Bot: " + data.reply;
+    botDiv.style.textAlign = "left";
+    botDiv.style.margin = "5px 0";
+    chatbotMessages.appendChild(botDiv);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+  } catch (err) {
+    const errDiv = document.createElement("div");
+    errDiv.textContent = "Bot: Something went wrong!";
+    errDiv.style.color = "red";
+    chatbotMessages.appendChild(errDiv);
+  }
+}
+
+// Send on button click or Enter key
+chatbotSend.addEventListener("click", sendChatbotMessage);
+chatbotInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendChatbotMessage();
 });

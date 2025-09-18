@@ -37,7 +37,7 @@ app.use(passport.session());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "", // your MySQL password
+  password: "1234", // your MySQL password
   database: "auth_dbb",
 });
 
@@ -108,12 +108,6 @@ passport.deserializeUser((id, done) => {
   });
 });
 
-
-
-        
-
-
-
 //OAuth Routes
 // Google
 app.get(
@@ -122,7 +116,7 @@ app.get(
 );
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup." }),
+  passport.authenticate("google", { failureRedirect: "/signup" }),
   (req, res) => {
     res.redirect(`/expensetracker.html?userId=${req.user.id}`);
   }
@@ -149,15 +143,18 @@ app.post("/signup", async (req, res) => {
     "INSERT INTO users (email, password) VALUES (?, ?)",
     [email, hashedPassword],
     (err, result) => {
-     if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
+      if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
           return res.status(400).json({ message: "Email already registered!" });
         }
         return res.status(500).send("Database error");
       }
 
       // Return userId as well
-      res.json({ message: "User registered successfully!", userId: result.insertId });
+      res.json({
+        message: "User registered successfully!",
+        userId: result.insertId,
+      });
     }
   );
 });
@@ -171,57 +168,84 @@ app.post("/login", (req, res) => {
     [email],
     async (err, results) => {
       if (err) return res.status(500).send("Database error");
-      if (results.length === 0)
-        return res.status(400).send( "User not found!");
+      if (results.length === 0) return res.status(400).send("User not found!");
 
       const user = results[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
-      if (!isPasswordValid)
-        return res.status(400).send("Invalid password!");
+      if (!isPasswordValid) return res.status(400).send("Invalid password!");
 
       res.redirect("/expensetracker");
     }
   );
 });
 
-////
-// ----------------------
-// AI Chatbot Endpoint
-// ----------------------
-const OpenAI = require("openai");
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Example: server.js or routes/chat.js
-app.post("/chat", async (req, res) => {
+//chatbot AI
+async function someChatbotFunction(message) {
   try {
-    console.log("Received message:", req.body);
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // ✅ faster & cheaper than gpt-3.5-turbo
+      messages: [{ role: "user", content: message }],
+    });
 
-    // Example: calling OpenAI or chatbot logic
-    const response = await someChatbotFunction(req.body.message);
+    if (
+      response &&
+      response.choices &&
+      response.choices.length > 0 &&
+      response.choices[0].message &&
+      response.choices[0].message.content
+    ) {
+      return response.choices[0].message.content;
+    } else {
+      throw new Error("No response from AI model");
+    }
+  } catch (err) {
+    console.error("OpenAI API Error:", err.message);
+    return "Sorry, I couldn't process your request right now. Please try again later.";
+  }
+}
 
-    res.json({ reply: response });
-  } catch (error) {
-    console.error("Chat endpoint error:", error);
+// Chat Route
+app.post("/chat", async (req, res) => {
+  const { message } = req.body;
+  console.log("Step 1: Route hit");
+  console.log("Request body:", req.body);
+
+  try {
+    console.log("Step 2: Calling chatbot API...");
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "http://localhost:5000", // optional, helps OpenRouter
+          "X-Title": "Expense Tracker Bot",
+        },
+        body: JSON.stringify({
+          model: "meta-llama/llama-3-8b-instruct", // free model
+          messages: [{ role: "user", content: message }],
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("Step 3: Got response:", data);
+
+    // Return the chatbot's reply back to the frontend
+    res.json({ reply: data.choices[0].message.content });
+  } catch (err) {
+    console.error("Chat fetch error:", err);
     res
       .status(500)
-      .json({ error: "Internal Server Error", details: error.message });
+      .json({
+        reply:
+          "Sorry, I couldn't process your request right now. Please try again later.",
+      });
   }
 });
-
-console.log("Step 1: Route hit");
-console.log("Request body:", req.body);
-
-// Wrap external calls with try/catch
-try {
-  console.log("Step 2: Calling chatbot API...");
-  const result = await someChatbotFunction(req.body.message);
-  console.log("Step 3: Got response:", result);
-  res.json({ reply: result });
-} catch (err) {
-  console.error("Error at Step 2:", err);
-  res.status(500).json({ error: err.message });
-}
 
 ////
 
