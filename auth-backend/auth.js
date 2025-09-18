@@ -34,7 +34,7 @@ app.use(passport.session());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234", // your MySQL password
+  password: "", // your MySQL password
   database: "auth_dbb",
 });
 
