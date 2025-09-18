@@ -1,9 +1,9 @@
 require('dotenv').config();
 
-console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
+/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
 console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
-console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);
+console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);*/
 
 const express = require("express");
 const mysql = require("mysql2");
@@ -85,9 +85,6 @@ passport.deserializeUser((id, done) => {
 
 
         
-
-
-
 //OAuth Routes
 // Google
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -108,8 +105,15 @@ app.post("/signup", async (req, res) => {
     "INSERT INTO users (email, password) VALUES (?, ?)",
     [email, hashedPassword],
     (err, result) => {
-      if (err) return res.status(500).json({ error: err });
-      res.json({ message: "User registered successfully!" });
+     if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ message: "Email already registered!" });
+        }
+        return res.status(500).json({ error: err });
+      }
+
+      // Return userId as well
+      res.json({ message: "User registered successfully!", userId: result.insertId });
     }
   );
 });
@@ -130,11 +134,6 @@ app.post("/login", (req, res) => {
     res.json({ message: "Login successful!",userId: user.id });
   });
 });
-
-app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000");
-});
-
 
 
 // add a transaction
@@ -185,3 +184,95 @@ app.put("/transactions/:id", (req, res) => {
     }
   );
 });
+
+//Create group
+app.post("/groups", (req, res) => {
+  const { group_name, created_by } = req.body;
+
+  db.query(
+    "INSERT INTO groups (group_name, created_by) VALUES (?, ?)",
+    [group_name, created_by],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+
+      const groupId = result.insertId;
+
+       // add creator as member
+      db.query(
+        "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
+        [groupId, created_by],
+        (err2) => {
+          if (err2) return res.status(500).json({ error: "Database error" });
+          res.json({ id: groupId, message: "Group created successfully!" });
+        }
+      );
+    }
+  );
+});
+
+// Add member
+app.post("/groups/:groupId/members", (req, res) => {
+  const { groupId } = req.params;
+  const { user_id } = req.body;
+
+  db.query(
+    "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
+    [groupId, user_id],
+    (err) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ message: "Member added to group!" });
+    }
+  );
+});
+
+// Add expense
+app.post("/groups/:groupId/expenses", (req, res) => {
+  const { groupId } = req.params;
+  const { paid_by, description, amount } = req.body;
+
+  db.query(
+    "INSERT INTO group_expenses (group_id, paid_by, description, amount) VALUES (?, ?, ?, ?)",
+    [groupId, paid_by, description, amount],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ id: result.insertId, message: "Expense added!" });
+    }
+  );
+});
+
+// Fetch group details
+app.get("/groups/:groupId", (req, res) => {
+  const { groupId } = req.params;
+
+  const groupQuery = "SELECT * FROM groups WHERE id = ?";
+  const membersQuery = `
+    SELECT u.id, u.email 
+    FROM group_members gm 
+    JOIN users u ON gm.user_id = u.id 
+    WHERE gm.group_id = ?`;
+  const expensesQuery = "SELECT * FROM group_expenses WHERE group_id = ? ORDER BY id DESC";
+
+  db.query(groupQuery, [groupId], (err, groupResult) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (groupResult.length === 0) return res.status(404).json({ message: "Group not found" });
+
+    db.query(membersQuery, [groupId], (err2, membersResult) => {
+      if (err2) return res.status(500).json({ error: "Database error" });
+
+      db.query(expensesQuery, [groupId], (err3, expensesResult) => {
+        if (err3) return res.status(500).json({ error: "Database error" });
+
+        res.json({
+          group: groupResult[0],
+          members: membersResult,
+          expenses: expensesResult
+        });
+      });
+    });
+  });
+});
+
+app.listen(5000, () => {
+  console.log("Server running on http://localhost:5000");
+});
+
