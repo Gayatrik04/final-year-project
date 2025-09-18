@@ -188,8 +188,7 @@ function applySort() {
 
 async function fetchTransactions() {
   try {
-    const response = await fetch(
-      `http://localhost:5000/transactions/${currentUser}`
+    const response = await fetch(`http://localhost:5000/transactions/${currentUser}`
     );
     if (!response.ok) throw new Error("Failed to fetch transactions");
     transactions = await response.json();
