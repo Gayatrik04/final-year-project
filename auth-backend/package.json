@@ -17,6 +17,7 @@
     "cookie": "^0.7.2",
     "cookie-signature": "^1.2.2",
     "cors": "^2.8.5",
+    "deep-email-validator": "^0.1.21",
     "dotenv": "^17.2.2",
     "dunder-proto": "^1.0.1",
     "ee-first": "^1.1.1",
@@ -29,9 +30,9 @@
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mysql2": "^3.14.5",
+    "openai": "^4.0.0",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
-    "passport-google-oauth20": "^2.0.0",
-    "openai": "^4.0.0"
+    "passport-google-oauth20": "^2.0.0"
   }
 }

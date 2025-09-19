@@ -9,6 +9,7 @@ const session = require("express-session");
 const path = require("path");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
+const validator = require("deep-email-validator");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -134,7 +135,7 @@ app.get(
 );
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup." }),
+  passport.authenticate("google", { failureRedirect: "/signup.html" }),
   (req, res) => {
     res.redirect(`/expensetracker.html?userId=${req.user.id}`);
   });
@@ -149,12 +150,20 @@ app.get(
   passport.authenticate("github", { failureRedirect: "/signup.html" }),
   (req, res) => {
     res.redirect(`/expensetracker.html?userId=${req.user.id}`);
-  }
-);
+  });
 
+  async function validateEmailDomain(email) {
+  const { valid, reason } = await validator.validate(email);
+  return { valid, reason };
+}
 // Signup Route
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
+  try{
+    const { valid, reason } = await validateEmailDomain(email);
+    if (!valid) {
+      return res.status(400).json({ message: `Invalid email` });
+    }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -164,17 +173,24 @@ app.post("/signup", async (req, res) => {
     [email, hashedPassword],
     (err, result) => {
      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).send("Email already registered!");
+      
+      if (err.code === "ER_DUP_ENTRY") {
+         return res.status(400).json({ message: "Email already registered!" });
+          }
+          return res.status(500).json({ message: "Database error" });
         }
-        return res.status(500).send("Database error");
-      }
 
-      // Return userId as well
-       res.redirect("/login.html");
-    }
-  );
-});
+        res.json({
+          message: "User registered successfully!",
+          userId: result.insertId,
+          next: "login.html"
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+  });
 
 // Login
 app.post("/login", (req, res) => {
@@ -184,22 +200,25 @@ app.post("/login", (req, res) => {
     "SELECT * FROM users WHERE email = ?",
     [email],
     async (err, results) => {
-      if (err) return res.status(500).send("Database error");
-      if (results.length === 0)
-        return res.status(400).send( "User not found!");
+       if (err) return res.status(500).json({ message: "Database error" });
+      if (results.length === 0) return res.status(400).json({ message: "User not found!" });
 
       const user = results[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) return res.status(400).send("Invalid password!");
 
       if (!isPasswordValid)
-        return res.status(400).send("Invalid password!");
+        return res.status(400).json({ message: "Invalid password!" });
 
-      res.redirect("/expensetracker");
-    }
-  );
+      res.json({
+      message: "Login successful!",
+      userId: user.id,
+      next: "expensetracker.html"
+      });
+    });
 });
 
+<<<<<<< HEAD
 // Chatbot Route Example
 
 app.post("/chat", async (req, res) => {
@@ -237,6 +256,11 @@ app.post("/chat", async (req, res) => {
     res.status(500).json({ reply: "Sorry, could not process your request." });
   }
 });
+=======
+//app.get("/expensetracker", (req, res) => {
+  //res.sendFile(path.join(__dirname, "..", "expensetracker.html"));
+//});
+>>>>>>> 586685998b65f6df5f7f67426ab7bb5da60ce96a
 
 // Expense Tracker & Transactions Routes
 
