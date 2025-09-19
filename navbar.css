@@ -107,6 +107,24 @@
               0 0 20px rgba(187,134,252,0.5);
 }
 
+.custom-navbar .nav-groupBtn {
+  background-color: #bb86fc;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 0 rgba(187,134,252,0.5);
+}
+
+.custom-navbar .nav-groupBtn:hover {
+  background-color: #9a5fff;
+  box-shadow: 0 0 10px rgba(187,134,252,0.7),
+              0 0 20px rgba(187,134,252,0.5);
+}
+
 /* Hamburger menu */
 .custom-navbar #menu-toggle {
   display: none;
@@ -150,7 +168,7 @@
     width: 100%;
   }
 
-  .custom-navbar .nav-logout {
+  .custom-navbar .nav-logout .nav-groupbtn {
     width: 100%;
     text-align: left;
   }
