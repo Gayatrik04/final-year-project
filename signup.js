@@ -38,7 +38,6 @@ function validateEmail(email) {
 
       if (response.ok) {
         alert(data.message); // "User registered successfully!"
-        localStorage.setItem("currentUser", data.userId);
       window.location.href = "login.html"; // redirect to dashboard
       } else {
       errorDiv.innerText = data.message || "Signup failed.";

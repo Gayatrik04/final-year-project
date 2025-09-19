@@ -9,15 +9,7 @@ const session = require("express-session");
 const path = require("path");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const GitHubStrategy = require("passport-github2").Strategy;
-const fetch = require("node-fetch");
 
-/*console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID); 
-console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET); 
-console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID); 
-console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET); 
-console.log("OpenRouter API Key:", process.env.OPENROUTER_API_KEY);*/
-
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -86,10 +78,8 @@ const findOrCreateUser = (email, done) => {
           (err, newUser) => {
             if (err) return done(err);
             done(null, newUser[0]);
-          }
-        );
-      }
-    );
+          });
+      });
   });
 };
 
@@ -144,11 +134,10 @@ app.get(
 );
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signup" }),
+  passport.authenticate("google", { failureRedirect: "/signup." }),
   (req, res) => {
     res.redirect(`/expensetracker.html?userId=${req.user.id}`);
-  }
-);
+  });
 
 // GitHub
 app.get(
@@ -157,32 +146,32 @@ app.get(
 );
 app.get(
   "/auth/github/callback",
-  passport.authenticate("github", { failureRedirect: "/signup" }),
+  passport.authenticate("github", { failureRedirect: "/signup.html" }),
   (req, res) => {
     res.redirect(`/expensetracker.html?userId=${req.user.id}`);
   }
 );
 
-// Signup/Login Routes
-
-// Signup
+// Signup Route
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
+
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
   db.query(
     "INSERT INTO users (email, password) VALUES (?, ?)",
     [email, hashedPassword],
     (err, result) => {
-      if (err) {
-        if (err.code === "ER_DUP_ENTRY")
-          return res.status(400).json({ message: "Email already registered!" });
+     if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).send("Email already registered!");
+        }
         return res.status(500).send("Database error");
       }
-      res.json({
-        message: "User registered successfully!",
-        userId: result.insertId,
-      });
+
+      // Return userId as well
+       res.redirect("/login.html");
     }
   );
 });
@@ -196,13 +185,17 @@ app.post("/login", (req, res) => {
     [email],
     async (err, results) => {
       if (err) return res.status(500).send("Database error");
-      if (results.length === 0) return res.status(400).send("User not found!");
+      if (results.length === 0)
+        return res.status(400).send( "User not found!");
 
       const user = results[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) return res.status(400).send("Invalid password!");
 
-      res.redirect(`/expensetracker.html?userId=${user.id}`);
+      if (!isPasswordValid)
+        return res.status(400).send("Invalid password!");
+
+      res.redirect("/expensetracker");
     }
   );
 });
@@ -247,9 +240,9 @@ app.post("/chat", async (req, res) => {
 
 // Expense Tracker & Transactions Routes
 
-app.get("/expensetracker", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "expensetracker.html"));
-});
+//app.get("/expensetracker", (req, res) => {
+  //res.sendFile(path.join(__dirname, "..", "expensetracker.html"));
+//});
 
 app.post("/transactions", (req, res) => {
   const { userId, date, amount, category, description } = req.body;
