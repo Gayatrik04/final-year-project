@@ -151,6 +151,7 @@ app.post("/signup", async (req, res) => {
     [email, hashedPassword],
     (err, result) => {
      if (err) {
+      
       if (err.code === "ER_DUP_ENTRY") {
          return res.status(400).json({ message: "Email already registered!" });
           }
